@@ -39,7 +39,7 @@
 #include <driver/spi_master.h>
 #include <esp_heap_caps.h>
 
-#define BUILD_TAG "2026-11-24f ota-test diag4s"
+#define BUILD_TAG "2026-11-24g 1800mA"
 
 // ---------------- Build options ----------------
 #define TEST_MODE 0              // 1 = color/chain-order test, no normal modes
@@ -48,7 +48,7 @@
 
 // Pull-OTA: bump this when you publish a new .bin, and put the same number
 // in manifest.json. The star updates itself if the manifest version is higher.
-const uint16_t FW_VERSION = 2;
+const uint16_t FW_VERSION = 3;
 const char *UPDATE_MANIFEST_URL =
     "https://raw.githubusercontent.com/RRVogel/ChristmasStar/main/manifest.json";
 
@@ -103,7 +103,7 @@ const uint8_t ENC_LED_LEVEL  = 20;      // brightness of the knob's status LED
 const float MA_PER_CHANNEL_FULL = 12.0f;  // mA per R/G/B channel at 255
 const float MA_IDLE_PER_PIXEL   = 1.0f;   // quiescent draw per pixel
 const uint16_t CURRENT_CHOICES[3] = {1000, 1500, 1800};  // mA; BFF JST ~2 A max
-const uint8_t DEFAULT_CURRENT_IDX = 0;    // 1000 mA until set in setup mode
+const uint8_t DEFAULT_CURRENT_IDX = 2;    // 1800 mA, for a 2 A charger
 const uint8_t DEFAULT_STAR_TRIM   = 100;  // % of the star's own scale (10-100)
 const uint8_t STAR_BRIGHT_FLOOR   = 230;  // star stays ~90% even when the knob dims the tree
 const uint8_t DEFAULT_BRIGHTNESS  = 128;  // 0-255 knob value
@@ -213,6 +213,7 @@ void loadSettings() {
   cur.sens   = prefs.getUChar("sens", DEFAULT_SENS);
   cur.chase  = prefs.getUChar("chase", DEFAULT_CHASE_SPD);
   cur.lastMode = prefs.getUChar("lastmode", DEFAULT_MODE);
+  uint8_t curv = prefs.getUChar("curv", 0);
   prefs.end();
   if (cur.mode >= MODE_COUNT) cur.mode = DEFAULT_MODE;
   if (cur.curIdx > 2) cur.curIdx = DEFAULT_CURRENT_IDX;
@@ -222,6 +223,16 @@ void loadSettings() {
   if (cur.bright < MIN_BRIGHTNESS) cur.bright = MIN_BRIGHTNESS;
   if (cur.lastMode >= MODE_COUNT || cur.lastMode == M_OFF) cur.lastMode = DEFAULT_MODE;
   if (cur.mode != M_OFF) cur.lastMode = cur.mode;
+  // One-time v3 migration: raise a previously saved 1000 mA default to 1800.
+  // 'curv' records that this has run, so a later setup-mode choice is kept.
+  if (curv < 3) {
+    cur.curIdx = 2;
+    prefs.begin("star", false);
+    prefs.putUChar("maxma", cur.curIdx);
+    prefs.putUChar("curv", 3);
+    prefs.end();
+    Serial.println("[nvs] current limit set to 1800 mA (v3 migration)");
+  }
   saved = cur;
 }
 

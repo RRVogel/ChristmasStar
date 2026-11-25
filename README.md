@@ -16,11 +16,12 @@ A printed owner's guide is in [`docs/ChristmasStar_Guide.pdf`](docs/ChristmasSta
 
 ## Current firmware
 
-- **FW_VERSION:** `1` (this integer is what the star compares against the manifest)
-- **BUILD_TAG:** `2026-11-24e power-toggle` (shown on the serial boot line and used to label the build)
-- Confirmed working on the hardware.
+- **FW_VERSION:** `3` (this integer is what the star compares against the manifest)
+- **BUILD_TAG:** `2026-11-24g 1800mA` (shown on the serial boot line and used to label the build)
+- Default current limit is **1800 mA**, for a 2 A charger. Stars that already had 1000 mA saved are raised to 1800 mA once on first boot of this build; a later setup-mode choice is kept.
+- Confirmed working on the hardware through version 2; this build changes only the current-limit default and the one-time migration.
 
-The published app binary is `firmware/StarController/ota/StarController.ino.bin` (1,487,152 bytes, SHA-256 `25b36566861d1d1c646d84e7e25b5caa7b211e3e3e77c43c0a8f56b94a5c3fbe`).
+The published app binary is `firmware/StarController/ota/StarController-fw3.bin` (1,487,344 bytes, SHA-256 `b08d1d6ded318ab4cb6c46eb69ad342766dd49a478f8f761475c77f0c49269c1`). Earlier binaries (`StarController.ino.bin` for v1, `StarController-fw2.bin` for v2) are kept in the same folder.
 
 ## Modes (knob click order)
 
