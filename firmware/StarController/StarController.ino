@@ -39,7 +39,7 @@
 #include <driver/spi_master.h>
 #include <esp_heap_caps.h>
 
-#define BUILD_TAG "2026-11-24g 1800mA"
+#define BUILD_TAG "2026-11-24h rainbow knob"
 
 // ---------------- Build options ----------------
 #define TEST_MODE 0              // 1 = color/chain-order test, no normal modes
@@ -48,7 +48,7 @@
 
 // Pull-OTA: bump this when you publish a new .bin, and put the same number
 // in manifest.json. The star updates itself if the manifest version is higher.
-const uint16_t FW_VERSION = 3;
+const uint16_t FW_VERSION = 4;
 const char *UPDATE_MANIFEST_URL =
     "https://raw.githubusercontent.com/RRVogel/ChristmasStar/main/manifest.json";
 
@@ -126,6 +126,8 @@ const uint32_t ROLLBACK_VALID_MS = 60000;
 const uint32_t CONNECTED_LED_MS = 800;   // quick green flash
 const uint32_t ERROR_LED_MS     = 1200;  // brief red blink (Wi-Fi lost / update failed)
 const uint32_t MODE_FLASH_MS    = 450;   // star flashes the new mode color
+const uint32_t RAINBOW_KNOB_MS  = 7000;  // Rainbow mode: full knob hue cycle
+const uint32_t ENC_LED_MIN_MS   = 80;    // min gap between seesaw LED writes
 const uint8_t  POWER_FADE_STEP  = 12;    // ~425 ms fade on power on/off
 const uint32_t WDT_TIMEOUT_MS = 30000;
 const size_t   API_MAX_BODY   = 256;
@@ -157,9 +159,11 @@ const char* MODE_NAMES[MODE_COUNT] = {
   "Star white, rainbow twinkle", "White twinkle", "Sound white star",
   "Color chaser"
 };
-// Knob LED color per mode (full scale, dimmed by ENC_LED_LEVEL)
+// Knob LED color per mode (full scale, dimmed by ENC_LED_LEVEL).
+// Rainbow is animated in showModeLed (and the mode-change flash); its table
+// slot is unused. Purple is reserved for "updating" and is not used here.
 const uint8_t MODE_LED[MODE_COUNT][3] = {
-  {255, 200, 120}, {255, 255, 255}, {255, 0, 0}, {160, 0, 255},
+  {255, 200, 120}, {255, 255, 255}, {255, 0, 0}, {255, 200, 0},
   {0, 120, 255}, {0, 255, 0}, {0, 0, 0},
   {0, 255, 220}, {180, 220, 255}, {255, 140, 0},
   {255, 0, 120}
@@ -385,14 +389,39 @@ void pushFrame(uint8_t level) {
 
 void setEncLed(uint8_t r, uint8_t g, uint8_t b) {
   if (!seesawOK) return;
+  // Skip unchanged colour, and rate-limit I2C writes so the seesaw stays
+  // responsive to the knob. Overlay states still win in serviceEncLed;
+  // the next call after ENC_LED_MIN_MS delivers any pending colour.
+  static uint8_t lastR = 0, lastG = 0, lastB = 0;
+  static bool haveLast = false;
+  static uint32_t lastWrite = 0;
+  uint32_t now = millis();
+  if (haveLast && r == lastR && g == lastG && b == lastB) return;
+  if (haveLast && (now - lastWrite) < ENC_LED_MIN_MS) return;
   encPix.setPixelColor(0, encPix.Color(r, g, b));
   encPix.show();
+  lastR = r; lastG = g; lastB = b;
+  haveLast = true;
+  lastWrite = now;
 }
+
+void rainbowKnobColor(uint8_t &r, uint8_t &g, uint8_t &b, uint32_t now) {
+  uint32_t phase = now % RAINBOW_KNOB_MS;
+  uint16_t hue = (uint16_t)(phase * 65536UL / RAINBOW_KNOB_MS);
+  unpack(Adafruit_NeoPixel::ColorHSV(hue, 255, 255), r, g, b);
+}
+
 void showModeLed() {
   if (!cur.power) { setEncLed(0, 0, 0); return; }
-  const uint8_t *c = MODE_LED[cur.mode];
-  setEncLed(scale8(c[0], ENC_LED_LEVEL), scale8(c[1], ENC_LED_LEVEL),
-            scale8(c[2], ENC_LED_LEVEL));
+  uint8_t r, g, b;
+  if (cur.mode == M_RAINBOW) {
+    rainbowKnobColor(r, g, b, millis());
+  } else {
+    const uint8_t *c = MODE_LED[cur.mode];
+    r = c[0]; g = c[1]; b = c[2];
+  }
+  setEncLed(scale8(r, ENC_LED_LEVEL), scale8(g, ENC_LED_LEVEL),
+            scale8(b, ENC_LED_LEVEL));
 }
 
 // ---------------- Network status (encoder LED overlay) ----------------
@@ -412,6 +441,7 @@ uint8_t visFade = 255;
 int8_t visFadeStep = 0;
 uint32_t starFlashUntil = 0;
 uint8_t starFlashR = 0, starFlashG = 0, starFlashB = 0;
+bool starFlashRainbow = false;
 
 void serviceEncLed() {
   uint32_t now = millis();
@@ -469,6 +499,11 @@ void startPowerFade(bool turningOn) {
 }
 
 void startStarModeFlash(uint8_t mode) {
+  starFlashRainbow = (mode == M_RAINBOW);
+  if (starFlashRainbow) {
+    starFlashUntil = millis() + MODE_FLASH_MS;
+    return;
+  }
   const uint8_t *c = MODE_LED[mode];
   starFlashR = c[0];
   starFlashG = c[1];
@@ -482,6 +517,19 @@ void startStarModeFlash(uint8_t mode) {
 
 void applyStarFlash(uint32_t now) {
   if ((int32_t)(starFlashUntil - now) <= 0) return;
+  if (starFlashRainbow) {
+    // A rainbow fan across the star, not a solid purple (OTA's colour).
+    uint32_t phase = now % RAINBOW_KNOB_MS;
+    uint16_t base = (uint16_t)(phase * 65536UL / RAINBOW_KNOB_MS);
+    int n = STAR_COUNT > 1 ? STAR_COUNT : 1;
+    for (int i = STAR_FIRST; i <= STAR_LAST; i++) {
+      uint8_t r, g, b;
+      uint16_t hue = base + (uint16_t)((i - STAR_FIRST) * (65536 / n));
+      unpack(Adafruit_NeoPixel::ColorHSV(hue, 255, 255), r, g, b);
+      setFrame(i, r, g, b);
+    }
+    return;
+  }
   for (int i = STAR_FIRST; i <= STAR_LAST; i++) {
     setFrame(i, starFlashR, starFlashG, starFlashB);
   }

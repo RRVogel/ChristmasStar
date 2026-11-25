@@ -4,7 +4,7 @@ The star already in England (or on a tree here) will install whatever this repos
 
 ## How the star decides to update
 
-- Firmware constant `FW_VERSION` is a number (currently **3**). The human label `BUILD_TAG` (currently `2026-11-24g 1800mA`) is only for the serial boot line and docs; it does not trigger an update.
+- Firmware constant `FW_VERSION` is a number (currently **4**). The human label `BUILD_TAG` (currently `2026-11-24h rainbow knob`) is only for the serial boot line and docs; it does not trigger an update.
 - About 60 seconds after the star joins Wi-Fi, and then about once every 24 hours, it GETs:
 
   `https://raw.githubusercontent.com/RRVogel/ChristmasStar/main/manifest.json`
@@ -14,8 +14,8 @@ The star already in England (or on a tree here) will install whatever this repos
 
   ```json
   {
-    "version": 4,
-    "url": "https://raw.githubusercontent.com/RRVogel/ChristmasStar/main/firmware/StarController/ota/StarController-fw4.bin"
+    "version": 5,
+    "url": "https://raw.githubusercontent.com/RRVogel/ChristmasStar/main/firmware/StarController/ota/StarController-fw5.bin"
   }
   ```
 
@@ -28,8 +28,8 @@ The star already in England (or on a tree here) will install whatever this repos
 ## Checklist
 
 1. **Change the version in the sketch, and nothing else you have not tested.**
-   - In `firmware/StarController/StarController.ino`, increment `FW_VERSION` (for example 3 → 4).
-   - Set `BUILD_TAG` to a new label, for example `2026-11-24h …`, so the serial boot line is easy to recognize.
+   - In `firmware/StarController/StarController.ino`, increment `FW_VERSION` (for example 4 → 5).
+   - Set `BUILD_TAG` to a new label, for example `2026-11-24i …`, so the serial boot line is easy to recognize.
    - Leave `UPDATE_MANIFEST_URL` pointing at `https://raw.githubusercontent.com/RRVogel/ChristmasStar/main/manifest.json` unless the repo itself has moved.
 
 2. **Compile with the same board and partition scheme.**
@@ -45,7 +45,7 @@ The star already in England (or on a tree here) will install whatever this repos
    Confirm it boots, modes and the knob still work, Wi-Fi reconnects, `christmasstar.local` still loads, and the serial line reads the new `FW_VERSION` and `BUILD_TAG`. Only after that is it safe to advertise the build.
 
 4. **Add the binary to the repo (or to a GitHub Release).**
-   - Preferred, matching earlier builds: copy it to a versioned name so the previous file remains, for example `firmware/StarController/ota/StarController-fw4.bin`.
+   - Preferred, matching earlier builds: copy it to a versioned name so the previous file remains, for example `firmware/StarController/ota/StarController-fw5.bin`.
    - Or attach `StarController.ino.bin` to a GitHub Release (for example tag `v2`).
    - Record the file size and SHA-256 for your own notes (`sha256sum`). The star will not read them.
 
@@ -56,8 +56,8 @@ The star already in England (or on a tree here) will install whatever this repos
 
    ```json
    {
-     "version": 4,
-     "url": "https://raw.githubusercontent.com/RRVogel/ChristmasStar/main/firmware/StarController/ota/StarController-fw4.bin"
+     "version": 5,
+     "url": "https://raw.githubusercontent.com/RRVogel/ChristmasStar/main/firmware/StarController/ota/StarController-fw5.bin"
    }
    ```
 
@@ -65,8 +65,8 @@ The star already in England (or on a tree here) will install whatever this repos
 
    ```json
    {
-     "version": 4,
-     "url": "https://github.com/RRVogel/ChristmasStar/releases/download/v4/StarController.ino.bin"
+     "version": 5,
+     "url": "https://github.com/RRVogel/ChristmasStar/releases/download/v5/StarController.ino.bin"
    }
    ```
 
@@ -78,15 +78,15 @@ The star already in England (or on a tree here) will install whatever this repos
 
 | Field | Value |
 |---|---|
-| `FW_VERSION` | 3 |
-| `BUILD_TAG` | 2026-11-24g 1800mA |
-| Binary | `firmware/StarController/ota/StarController-fw3.bin` |
-| Size | 1,487,344 bytes |
-| SHA-256 | `b08d1d6ded318ab4cb6c46eb69ad342766dd49a478f8f761475c77f0c49269c1` |
+| `FW_VERSION` | 4 |
+| `BUILD_TAG` | 2026-11-24h rainbow knob |
+| Binary | `firmware/StarController/ota/StarController-fw4.bin` |
+| Size | 1,487,840 bytes |
+| SHA-256 | `626f82086fa6ca3191203e96c834630bfaeb75f6ce36cf7f2bd5fe8d5d8f0c1c` |
 | Manifest URL the star polls | `https://raw.githubusercontent.com/RRVogel/ChristmasStar/main/manifest.json` |
-| Manifest `version` | 3 (so a star already on this build sees no update) |
+| Manifest `version` | 4 (so a star already on this build sees no update) |
 
-This build sets the default current limit to 1800 mA and, on first boot, migrates a previously saved 1000 mA limit to 1800 mA (NVS key `curv`). A later setup-mode choice is kept. Older binaries remain: v1 `StarController.ino.bin`, v2 `StarController-fw2.bin`. The next published version should be **4**.
+This build makes the Rainbow-mode knob light cycle through rainbow colors, so a steady purple means only that the star is updating. The v3 current-limit migration (`curv < 3`) is unchanged and will not run again. Older binaries remain: v1 `StarController.ino.bin`, v2 `StarController-fw2.bin`, v3 `StarController-fw3.bin`. The next published version should be **5**.
 
 ## What not to do
 

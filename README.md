@@ -16,12 +16,12 @@ A printed owner's guide is in [`docs/ChristmasStar_Guide.pdf`](docs/ChristmasSta
 
 ## Current firmware
 
-- **FW_VERSION:** `3` (this integer is what the star compares against the manifest)
-- **BUILD_TAG:** `2026-11-24g 1800mA` (shown on the serial boot line and used to label the build)
-- Default current limit is **1800 mA**, for a 2 A charger. Stars that already had 1000 mA saved are raised to 1800 mA once on first boot of this build; a later setup-mode choice is kept.
-- Confirmed working on the hardware through version 2; this build changes only the current-limit default and the one-time migration.
+- **FW_VERSION:** `4` (this integer is what the star compares against the manifest)
+- **BUILD_TAG:** `2026-11-24h rainbow knob` (shown on the serial boot line and used to label the build)
+- Default current limit is **1800 mA**, for a 2 A charger. Stars that already had 1000 mA saved are raised to 1800 mA once on first boot of firmware 3; a later setup-mode choice is kept.
+- In Rainbow mode the knob light slowly cycles through rainbow colors. Purple is reserved for updates, so it is not used as a steady mode color.
 
-The published app binary is `firmware/StarController/ota/StarController-fw3.bin` (1,487,344 bytes, SHA-256 `b08d1d6ded318ab4cb6c46eb69ad342766dd49a478f8f761475c77f0c49269c1`). Earlier binaries (`StarController.ino.bin` for v1, `StarController-fw2.bin` for v2) are kept in the same folder.
+The published app binary is `firmware/StarController/ota/StarController-fw4.bin` (1,487,840 bytes, SHA-256 `626f82086fa6ca3191203e96c834630bfaeb75f6ce36cf7f2bd5fe8d5d8f0c1c`). Earlier binaries (`StarController.ino.bin` for v1, `StarController-fw2.bin` for v2, `StarController-fw3.bin` for v3) are kept in the same folder.
 
 ## Modes (knob click order)
 
@@ -30,7 +30,7 @@ The little light in the knob shows which mode is on. Turn the knob for brightnes
 1. **White pulse** — warm white, the tree and star breathe (knob: warm white)
 2. **Star white, tree color** — bright white star, tree slowly changes color (default; knob: white)
 3. **Classic** — red, green and warm white tree, warm white star (knob: red)
-4. **Rainbow** — rainbow colors flow up the tree into the star (knob: purple)
+4. **Rainbow** — rainbow colors flow up the tree into the star (knob: cycles through rainbow colors)
 5. **Twinkle** — soft warm glow with sparkles (knob: blue)
 6. **Sound rainbow** — music show: the tree fills with color and the star changes color with the beat (knob: green; turn for sensitivity)
 7. **Star white, rainbow twinkle** — bright white star, rainbow twinkles on the tree (knob: light blue-green)
