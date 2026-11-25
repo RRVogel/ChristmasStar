@@ -32,6 +32,7 @@
 #include <WebServer.h>
 #include <ESPmDNS.h>
 #include <time.h>
+#include <stdlib.h>
 #include <esp_ota_ops.h>
 #include <esp_task_wdt.h>
 #include <ESP_I2S.h>
@@ -39,7 +40,7 @@
 #include <driver/spi_master.h>
 #include <esp_heap_caps.h>
 
-#define BUILD_TAG "2026-11-24h rainbow knob"
+#define BUILD_TAG "2026-11-24i london window"
 
 // ---------------- Build options ----------------
 #define TEST_MODE 0              // 1 = color/chain-order test, no normal modes
@@ -48,7 +49,7 @@
 
 // Pull-OTA: bump this when you publish a new .bin, and put the same number
 // in manifest.json. The star updates itself if the manifest version is higher.
-const uint16_t FW_VERSION = 4;
+const uint16_t FW_VERSION = 5;
 const char *UPDATE_MANIFEST_URL =
     "https://raw.githubusercontent.com/RRVogel/ChristmasStar/main/manifest.json";
 
@@ -120,8 +121,12 @@ const uint32_t SAVE_DELAY_MS  = 3000;     // write NVS 3 s after last change
 const uint32_t DIAG_MS        = 4000;   // status line every 4 s
 const uint32_t PORTAL_TIMEOUT_MS = 10UL * 60UL * 1000UL;  // ~10 min
 const uint32_t OTA_FIRST_CHECK_MS = 60000;
-const uint32_t OTA_PERIOD_MS  = 24UL * 60UL * 60UL * 1000UL;
-const uint32_t OTA_RETRY_MS   = 60UL * 60UL * 1000UL;     // retry in 1 h on error
+const uint32_t OTA_RETRY_MS   = 30UL * 60UL * 1000UL;     // retry inside the evening window
+// Periodic checks: once per London day, at a random-ish time 17:00–23:59.
+// POSIX TZ for Europe/London (GMT/BST). Boot/Wi-Fi-join check is separate (~60 s).
+const char *LONDON_TZ = "GMT0BST,M3.5.0/1,M10.5.0";
+const int OTA_WIN_START_MIN = 17 * 60;   // 17:00 Europe/London
+const int OTA_WIN_END_MIN   = 24 * 60;   // midnight exclusive → 17:00–23:59
 const uint32_t ROLLBACK_VALID_MS = 60000;
 const uint32_t CONNECTED_LED_MS = 800;   // quick green flash
 const uint32_t ERROR_LED_MS     = 1200;  // brief red blink (Wi-Fi lost / update failed)
@@ -163,7 +168,7 @@ const char* MODE_NAMES[MODE_COUNT] = {
 // Rainbow is animated in showModeLed (and the mode-change flash); its table
 // slot is unused. Purple is reserved for "updating" and is not used here.
 const uint8_t MODE_LED[MODE_COUNT][3] = {
-  {255, 200, 120}, {255, 255, 255}, {255, 0, 0}, {255, 200, 0},
+  {255, 220, 0}, {255, 255, 255}, {255, 0, 0}, {255, 200, 0},
   {0, 120, 255}, {0, 255, 0}, {0, 0, 0},
   {0, 255, 220}, {180, 220, 255}, {255, 140, 0},
   {255, 0, 120}
@@ -1162,6 +1167,7 @@ WiFiManager wm;
 TaskHandle_t netTaskHandle = NULL;
 uint32_t connectedAtMs = 0;
 uint32_t nextOtaCheckMs = 0;
+bool bootOtaPending = false;   // first check ~60 s after a Wi-Fi join
 bool ntpStarted = false;
 bool lanOtaStarted = false;
 volatile uint8_t lastWifiReason = 0;
@@ -1330,33 +1336,180 @@ void runPullUpdate(const String &url) {
   signalError();
 }
 
-void servicePullOta() {
-  if (!wifiConnected || wm.getConfigPortalActive()) return;
-  if (!timeLooksValid() && millis() - connectedAtMs < OTA_FIRST_CHECK_MS + 30000) {
-    return;  // give NTP a little more time before the first check
+void useLondonTz() {
+  static bool ready = false;
+  if (!ready) {
+    setenv("TZ", LONDON_TZ, 1);
+    tzset();
+    ready = true;
   }
-  uint32_t now = millis();
-  if (nextOtaCheckMs == 0 || (int32_t)(now - nextOtaCheckMs) < 0) return;
-  int version = 0;
-  String url;
-  uint8_t mf = fetchManifest(version, url);
+}
+
+bool londonLocalTime(struct tm *out) {
+  if (!timeLooksValid() || !out) return false;
+  useLondonTz();
+  time_t now = time(NULL);
+  localtime_r(&now, out);
+  return true;
+}
+
+int minuteOfDay(const struct tm *t) {
+  return t->tm_hour * 60 + t->tm_min;
+}
+
+bool inEveningWindow(const struct tm *t) {
+  int m = minuteOfDay(t);
+  return m >= OTA_WIN_START_MIN && m < OTA_WIN_END_MIN;
+}
+
+// Stable-ish minute in 17:00–23:59 for this device and London date.
+int pickWindowMinute(int year, int yday) {
+  uint32_t seed = ((uint32_t)year << 16) ^ (uint32_t)(yday + 1);
+  uint64_t mac = ESP.getEfuseMac();
+  seed ^= (uint32_t)mac ^ (uint32_t)(mac >> 32);
+  seed = seed * 1664525u + 1013904223u;
+  const int span = OTA_WIN_END_MIN - OTA_WIN_START_MIN;  // 420 minutes
+  return OTA_WIN_START_MIN + (int)(seed % (uint32_t)span);
+}
+
+void logNextOtaCheck(uint32_t whenMs) {
+  if (!timeLooksValid()) return;
+  useLondonTz();
+  int32_t deltaMs = (int32_t)(whenMs - millis());
+  time_t t = time(NULL) + (time_t)((deltaMs + (deltaMs >= 0 ? 500 : -500)) / 1000);
+  struct tm lt;
+  localtime_r(&t, &lt);
+  Serial.printf("[ota] next check %02d:%02d London\n", lt.tm_hour, lt.tm_min);
+}
+
+void setNextOtaCheck(uint32_t whenMs) {
+  nextOtaCheckMs = whenMs;
+  logNextOtaCheck(whenMs);
+}
+
+void scheduleAtLondon(const struct tm *date, int minuteOfDayVal) {
+  useLondonTz();
+  struct tm t = *date;
+  t.tm_hour = minuteOfDayVal / 60;
+  t.tm_min = minuteOfDayVal % 60;
+  t.tm_sec = 0;
+  t.tm_isdst = -1;
+  time_t tgt = mktime(&t);
+  time_t now = time(NULL);
+  if (tgt == (time_t)-1 || tgt <= now) {
+    t.tm_mday += 1;
+    t.tm_isdst = -1;
+    tgt = mktime(&t);
+  }
+  if (tgt == (time_t)-1 || tgt <= now) {
+    nextOtaCheckMs = 0;
+    return;
+  }
+  setNextOtaCheck(millis() + (uint32_t)((tgt - now) * 1000UL));
+}
+
+// Next evening slot: today's 17:00–23:59 pick if it has not started yet,
+// otherwise tomorrow's. Used after a successful or missing-manifest check,
+// and to defer work that would fall outside the window.
+void scheduleNextEvening() {
+  struct tm lt;
+  if (!londonLocalTime(&lt)) {
+    nextOtaCheckMs = 0;
+    return;
+  }
+  if (minuteOfDay(&lt) < OTA_WIN_START_MIN) {
+    scheduleAtLondon(&lt, pickWindowMinute(lt.tm_year, lt.tm_yday));
+    return;
+  }
+  useLondonTz();
+  struct tm tom = lt;
+  tom.tm_mday += 1;
+  tom.tm_hour = 12;
+  tom.tm_min = 0;
+  tom.tm_sec = 0;
+  tom.tm_isdst = -1;
+  time_t noon = mktime(&tom);
+  if (noon != (time_t)-1) localtime_r(&noon, &tom);
+  scheduleAtLondon(&tom, pickWindowMinute(tom.tm_year, tom.tm_yday));
+}
+
+// After MF_FAIL: retry in 30 min only if that time is still inside today's
+// evening window; otherwise wait for the next evening.
+void scheduleRetryOrNextEvening() {
+  struct tm lt;
+  if (!londonLocalTime(&lt)) {
+    nextOtaCheckMs = 0;
+    return;
+  }
+  if (inEveningWindow(&lt)) {
+    time_t trial = time(NULL) + (time_t)(OTA_RETRY_MS / 1000);
+    struct tm tt;
+    useLondonTz();
+    localtime_r(&trial, &tt);
+    if (tt.tm_year == lt.tm_year && tt.tm_yday == lt.tm_yday && inEveningWindow(&tt)) {
+      setNextOtaCheck(millis() + OTA_RETRY_MS);
+      return;
+    }
+  }
+  scheduleNextEvening();
+}
+
+void finishOtaCheck(uint8_t mf, int version, const String &url) {
   if (mf == MF_MISSING) {
-    // No manifest published yet (expected until the GitHub repo exists).
-    // Stay quiet — no error blink — and wait a long time before asking again.
-    nextOtaCheckMs = now + OTA_PERIOD_MS;
+    // No manifest: stay quiet and wait for the next evening. No error blink.
+    scheduleNextEvening();
     return;
   }
   if (mf != MF_OK) {
-    nextOtaCheckMs = now + OTA_RETRY_MS;
+    scheduleRetryOrNextEvening();
     return;
   }
   if (version <= (int)FW_VERSION) {
     Serial.printf("[ota] up to date (fw %u, manifest %d)\n", FW_VERSION, version);
-    nextOtaCheckMs = now + OTA_PERIOD_MS;
+    scheduleNextEvening();
     return;
   }
   runPullUpdate(url);
-  nextOtaCheckMs = now + OTA_RETRY_MS;
+  // Returned only if the flash failed; retry inside the window if possible.
+  scheduleRetryOrNextEvening();
+}
+
+void servicePullOta() {
+  if (!wifiConnected || wm.getConfigPortalActive()) return;
+  uint32_t now = millis();
+
+  if (bootOtaPending) {
+    // Keep the first check ~60 s after join, even if NTP is not ready yet
+    // (after a short grace). This is the unplug-and-replug update path.
+    if (!timeLooksValid() && now - connectedAtMs < OTA_FIRST_CHECK_MS + 30000) {
+      return;  // give NTP a little more time before the first check
+    }
+    if ((int32_t)(now - nextOtaCheckMs) < 0) return;
+    bootOtaPending = false;
+    int version = 0;
+    String url;
+    uint8_t mf = fetchManifest(version, url);
+    finishOtaCheck(mf, version, url);
+    return;
+  }
+
+  // Periodic checks need a valid London clock and only run 17:00–23:59.
+  if (!timeLooksValid()) return;
+  if (nextOtaCheckMs == 0) {
+    scheduleNextEvening();
+    return;
+  }
+  if ((int32_t)(now - nextOtaCheckMs) < 0) return;
+
+  struct tm lt;
+  if (!londonLocalTime(&lt) || !inEveningWindow(&lt)) {
+    scheduleNextEvening();
+    return;
+  }
+  int version = 0;
+  String url;
+  uint8_t mf = fetchManifest(version, url);
+  finishOtaCheck(mf, version, url);
 }
 
 void serviceLanOta() {
@@ -1827,6 +1980,7 @@ void serviceReconnect() {
     if (!wasConnected) {
       connectedAtMs = millis();
       nextOtaCheckMs = connectedAtMs + OTA_FIRST_CHECK_MS;
+      bootOtaPending = true;
       applyTxPower();
       startNtpIfNeeded();
       Serial.printf("[wifi] connected, IP %s, RSSI %d\n",

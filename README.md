@@ -16,18 +16,20 @@ A printed owner's guide is in [`docs/ChristmasStar_Guide.pdf`](docs/ChristmasSta
 
 ## Current firmware
 
-- **FW_VERSION:** `4` (this integer is what the star compares against the manifest)
-- **BUILD_TAG:** `2026-11-24h rainbow knob` (shown on the serial boot line and used to label the build)
+- **FW_VERSION:** `5` (this integer is what the star compares against the manifest)
+- **BUILD_TAG:** `2026-11-24i london window` (shown on the serial boot line and used to label the build)
 - Default current limit is **1800 mA**, for a 2 A charger. Stars that already had 1000 mA saved are raised to 1800 mA once on first boot of firmware 3; a later setup-mode choice is kept.
 - In Rainbow mode the knob light slowly cycles through rainbow colors. Purple is reserved for updates, so it is not used as a steady mode color.
+- White pulse uses a yellow knob light, so it is distinct from Star white (white) and from Sound white star (orange).
+- Daily update checks run in the evening, Europe/London, between 17:00 and 23:59. Replugging (or rejoining Wi-Fi) still triggers a check about 60 seconds later.
 
-The published app binary is `firmware/StarController/ota/StarController-fw4.bin` (1,487,840 bytes, SHA-256 `626f82086fa6ca3191203e96c834630bfaeb75f6ce36cf7f2bd5fe8d5d8f0c1c`). Earlier binaries (`StarController.ino.bin` for v1, `StarController-fw2.bin` for v2, `StarController-fw3.bin` for v3) are kept in the same folder.
+The published app binary is `firmware/StarController/ota/StarController-fw5.bin` (1,489,136 bytes, SHA-256 `90079247ee1444f5f593d66d6333e8895f41d96954cde9f7b123c17291d06085`). Earlier binaries (`StarController.ino.bin` for v1, `StarController-fw2.bin` for v2, `StarController-fw3.bin` for v3, `StarController-fw4.bin` for v4) are kept in the same folder.
 
 ## Modes (knob click order)
 
 The little light in the knob shows which mode is on. Turn the knob for brightness, except in the music shows (sensitivity) and Color chaser (speed). The star itself stays bright.
 
-1. **White pulse** — warm white, the tree and star breathe (knob: warm white)
+1. **White pulse** — warm white, the tree and star breathe (knob: yellow)
 2. **Star white, tree color** — bright white star, tree slowly changes color (default; knob: white)
 3. **Classic** — red, green and warm white tree, warm white star (knob: red)
 4. **Rainbow** — rainbow colors flow up the tree into the star (knob: cycles through rainbow colors)
@@ -63,11 +65,11 @@ To forget a saved network, join the setup network again, open the page, tap Info
 
 ## Over-the-air updates
 
-About a minute after the star joins Wi-Fi, and then about once a day, it fetches:
+About a minute after the star joins Wi-Fi, and then once per London evening (at a random-ish time between 17:00 and 23:59 Europe/London), it fetches:
 
 `https://raw.githubusercontent.com/RRVogel/ChristmasStar/main/manifest.json`
 
-If that file's `version` is higher than `FW_VERSION` on the star, it downloads the `.bin` at the manifest `url`, flashes it, and reboots. The knob glows purple while it updates — do not unplug it then.
+If that file's `version` is higher than `FW_VERSION` on the star, it downloads the `.bin` at the manifest `url`, flashes it, and reboots. The knob glows purple while it updates — do not unplug it then. Replugging the star, or it rejoining Wi-Fi, triggers another check about 60 seconds later.
 
 Only `version` (integer) and `url` (a direct http/https link) are read. The star follows redirects, so a GitHub Release asset URL also works. There are no sha or size fields.
 
