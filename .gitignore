@@ -1,0 +1,8 @@
+# Arduino build leftovers — keep only the app .bin in ota/
+firmware/StarController/build/
+firmware/StarController/ota/*.elf
+firmware/StarController/ota/*.map
+firmware/StarController/ota/*.bootloader.bin
+firmware/StarController/ota/*.merged.bin
+firmware/StarController/ota/*.partitions.bin
+.DS_Store

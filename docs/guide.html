@@ -1,0 +1,151 @@
+<!DOCTYPE html><html lang="en-GB"><head><meta charset="utf-8">
+<style>
+@page { size: Letter; margin: 0.7in 0.9in 0.6in 0.9in; }
+:root { --green:#1f5a3a; --red:#a4232f; --gold:#c9962b; --ink:#222; }
+* { box-sizing:border-box; }
+body { font-family:"Atkinson Hyperlegible","Lato",sans-serif; color:var(--ink); font-size:12pt; line-height:1.32; margin:0; }
+/* keep content within A4 width too: Letter 8.5in - 1.8in = 6.7in (A4 is 8.27in) */
+.page { width:6.7in; page-break-after:always; break-after:page; }
+.page:last-child { page-break-after:auto; break-after:auto; }
+header.title { display:flex; align-items:center; gap:14px; border-bottom:3px solid var(--green); padding-bottom:8px; margin-bottom:10px; }
+header.title h1 { font-family:"Merriweather",serif; color:var(--green); font-size:23pt; margin:0; line-height:1.15; }
+header.title .sub { color:var(--red); font-size:12.5pt; margin-top:2px; }
+h2 { font-family:"Merriweather",serif; font-size:14.5pt; color:var(--red); margin:10px 0 3px; display:flex; align-items:center; gap:7px; break-after:avoid; }
+h2 .dot { width:10px; height:10px; background:var(--green); transform:rotate(45deg); display:inline-block; flex:none; }
+p { margin:3px 0 6px; }
+ul, ol { margin:3px 0 6px; padding-left:24px; }
+li { margin:2px 0; }
+b { color:#111; }
+.tip { background:#f3f7f3; border-left:5px solid var(--green); padding:7px 11px; margin:7px 0; border-radius:3px; break-inside:avoid; }
+.warn { background:#fbf1f1; border-left:5px solid var(--red); padding:7px 11px; margin:7px 0; border-radius:3px; break-inside:avoid; }
+.code { font-weight:700; font-size:13.5pt; color:var(--green); letter-spacing:.3px; }
+.box { display:flex; gap:10px; margin:4px 0 6px; }
+.box div { flex:1; border:1.5px solid #cfdccf; border-radius:8px; padding:7px 9px; text-align:center; font-size:11.5pt; line-height:1.3; }
+.box svg { display:block; margin:0 auto 3px; }
+.box b { display:block; font-size:12.5pt; }
+.knob { display:flex; gap:10px; margin:4px 0 6px; }
+.knob div { flex:1; border-radius:8px; padding:7px 10px; background:#fbf7ec; border:1.5px solid #ecdcae; break-inside:avoid; }
+.knob b { color:var(--red); font-size:13pt; }
+.signoff { text-align:center; margin-top:10px; font-family:"Merriweather",serif; color:var(--green); font-size:14pt; }
+.signoff .r { color:var(--red); font-size:16pt; display:block; margin-top:2px; }
+table { width:100%; border-collapse:collapse; margin-top:6px; font-size:12pt; }
+th { background:var(--green); color:#fff; text-align:left; padding:6px 8px; font-size:12pt; }
+td { padding:3px 7px; border-bottom:1px solid #dde4dd; vertical-align:middle; line-height:1.28; }
+tr { break-inside:avoid; }
+tr:nth-child(even) td { background:#f7faf7; }
+td.n { width:22px; font-weight:700; color:var(--green); text-align:center; }
+td.k { width:1.4in; }
+.kw { display:flex; align-items:center; gap:7px; }
+.kw .sw { flex:none; margin-right:0; }
+td.s { width:1.3in; font-weight:700; }
+.sw { display:inline-block; width:20px; height:20px; border-radius:50%; vertical-align:middle; margin-right:6px; border:1.5px solid #666; }
+.k span.lbl { vertical-align:middle; }
+.small { font-size:10.5pt; color:#555; font-weight:400; display:block; }
+.note { margin-top:10px; }
+</style></head><body>
+
+<!-- star svg symbol -->
+<svg width="0" height="0" style="position:absolute"><defs>
+<symbol id="star" viewBox="0 0 100 100"><polygon points="50,4 61.8,36.5 96,36.9 68.9,58.1 78.5,91 50,71.5 21.5,91 31.1,58.1 4,36.9 38.2,36.5" fill="#c9962b" stroke="#a4232f" stroke-width="3" stroke-linejoin="round"/></symbol>
+</defs></svg>
+
+<!-- PAGE 1 -->
+<section class="page">
+<header class="title"><svg width="52" height="52"><use href="#star"/></svg>
+<div><h1>Your Christmas Star</h1><div class="sub">Setting up &mdash; a simple guide</div></div></header>
+
+<h2><span class="dot"></span>What&rsquo;s in the box</h2>
+<div class="box">
+<div><svg width="34" height="34"><use href="#star"/></svg><b>The star</b>11 lights. It sits on the very top of the tree.</div>
+<div><svg width="60" height="34" viewBox="0 0 60 34"><path d="M3 28 Q15 4 30 18 T57 8" fill="none" stroke="#1f5a3a" stroke-width="2.5"/><circle cx="8" cy="20" r="3.5" fill="#a4232f"/><circle cx="20" cy="12" r="3.5" fill="#c9962b"/><circle cx="32" cy="19" r="3.5" fill="#2e7d4f"/><circle cx="44" cy="15" r="3.5" fill="#3b6fc4"/><circle cx="55" cy="9" r="3.5" fill="#a4232f"/></svg><b>The light string</b>49 lights, wrapped around the control box.</div>
+<div><svg width="34" height="34" viewBox="0 0 34 34"><rect x="3" y="9" width="28" height="20" rx="4" fill="#1f5a3a"/><circle cx="17" cy="19" r="6.5" fill="#fff" stroke="#c9962b" stroke-width="2"/><rect x="15.5" y="2" width="3" height="7" fill="#555"/></svg><b>The control box</b>With a knob you can turn and push.</div>
+</div>
+<p><b>Power:</b> it runs from a USB phone charger plug, using the USB-C cable. Please use a charger that says <b>2 A (2 amps) or more</b> on it &mdash; most modern phone or tablet chargers are fine.</p>
+
+<h2><span class="dot"></span>Putting it on the tree</h2>
+<ol>
+<li>Pop the <b>star</b> on the <b>top</b> of the tree.</li>
+<li>The light string comes wrapped around the control box. Starting just under the star, <b>unwrap</b> it from the box as you go round and round the tree, working <b>downwards</b>.</li>
+<li>When the string is all unwrapped, set the <b>control box</b> under the tree, close enough for the USB cable to reach the charger.</li>
+</ol>
+
+<h2><span class="dot"></span>Switching on</h2>
+<p>Plug the cable into the charger and switch it on at the wall. The lights come on with a <b>white star and a colourful tree</b>.</p>
+
+<h2><span class="dot"></span>The knob</h2>
+<div class="knob">
+<div><b>TURN it</b><br>to make the lights brighter or dimmer. Clockwise makes them brighter.</div>
+<div><b>PUSH it</b><br>to change to the next light show.</div>
+</div>
+<p>The little light in the knob changes colour to show which light show is on. (There&rsquo;s a list of them all on the last page.)</p>
+<p>Keep pushing to reach <b>Off</b>. Push once more to start again from the beginning.</p>
+
+<h2><span class="dot"></span>The music shows</h2>
+<p>A tiny microphone in the control box listens to music in the room. If the lights hardly react, turn the knob to turn up the sensitivity (in the music shows, the knob sets how sensitive it is instead of brightness), or play the music a bit louder or nearer.</p>
+
+<div class="tip"><b>That&rsquo;s all you need!</b> The knob does everything. The phone part on the next page is optional &mdash; it just gives you a handy remote control on your iPhone.</div>
+</section>
+
+<!-- PAGE 2 -->
+<section class="page">
+<h2 style="margin-top:0"><span class="dot"></span>Connecting to your iPhone (first time only)</h2>
+<p>When the star needs your Wi-Fi, the knob <b>blinks blue</b>. Then:</p>
+<ol>
+<li>On your iPhone, open <b>Settings</b>, then tap <b>Wi-Fi</b>.</li>
+<li>Tap <b>Christmas Star Setup</b>. The password is: <span class="code">starlight</span></li>
+<li>A page should pop up by itself. If it doesn&rsquo;t, open <b>Safari</b> and type <span class="code">192.168.4.1</span> in the address bar.</li>
+<li>Tap <b>Configure WiFi</b>.</li>
+<li>Tap the name of <b>your home Wi-Fi</b> in the list.</li>
+<li>Type your home Wi-Fi password, then tap <b>Save</b>.</li>
+</ol>
+<p>Your phone goes back to your normal Wi-Fi. The knob <b>flashes green</b> when the star is connected. Done!</p>
+<div class="tip"><b>Tip:</b> if your iPhone says <i>&ldquo;no internet connection&rdquo;</i>, that&rsquo;s normal here &mdash; choose to stay connected (or <i>use without internet</i>).<br>If the star couldn&rsquo;t join, the setup page will tell you. Check the Wi-Fi password and try again.</div>
+
+<h2><span class="dot"></span>Using your phone as a remote</h2>
+<p>With your phone on your home Wi-Fi, open <b>Safari</b> and type <span class="code">christmasstar.local</span></p>
+<p><b>Handy:</b> tap the Share button (the square with an arrow), then <b>Add to Home Screen</b>. Next time, just tap the icon.</p>
+<p>On that page you can:</p>
+<ul>
+<li>Turn the lights off and on again with the <b>power button</b> at the top.</li>
+<li>Pick any light show.</li>
+<li>Make the lights brighter or dimmer.</li>
+<li>Change how much the music shows react to sound, and how fast <b>Color chaser</b> goes.</li>
+</ul>
+
+<h2><span class="dot"></span>Updates</h2>
+<p>Now and then the star quietly checks over the Wi-Fi for little improvements from Rick. You don&rsquo;t need to do anything. While it updates, the knob <b>glows purple</b> &mdash; please don&rsquo;t unplug it then.</p>
+
+<h2><span class="dot"></span>If something goes wrong</h2>
+<ul>
+<li>Unplug it, wait <b>10 seconds</b>, and plug it back in.</li>
+<li>If the knob keeps <b>blinking blue</b>, it has lost the Wi-Fi. Just do the iPhone steps at the top of this page again.</li>
+</ul>
+<div class="warn">Please keep it <b>indoors</b> and away from water.</div>
+
+<div class="signoff">Made by Rick Vogel just for you.<span class="r">Merry Christmas!</span></div>
+</section>
+
+<!-- PAGE 3 -->
+<section class="page">
+<header class="title"><svg width="52" height="52"><use href="#star"/></svg>
+<div><h1>Light shows</h1><div class="sub">Push the knob to go to the next one. The knob&rsquo;s colour shows which is on.</div></div></header>
+<table>
+<tr><th></th><th>Knob colour</th><th>Show</th><th>What it looks like</th></tr>
+<tr><td class="n">1</td><td class="k"><div class="kw"><span class="sw" style="background:#ffd59a"></span><span class="lbl">Warm white</span></div></td><td class="s">White pulse</td><td>The whole tree and star softly &ldquo;breathe&rdquo; in warm white.</td></tr>
+<tr><td class="n">2</td><td class="k"><div class="kw"><span class="sw" style="background:#ffffff"></span><span class="lbl">White</span></div></td><td class="s">Star white, tree colour<span class="small">It starts on this one</span></td><td>A bright white star, and the tree slowly changes through the colours.</td></tr>
+<tr><td class="n">3</td><td class="k"><div class="kw"><span class="sw" style="background:#d62828"></span><span class="lbl">Red</span></div></td><td class="s">Classic</td><td>A traditional red, green and warm white tree with a warm white star.</td></tr>
+<tr><td class="n">4</td><td class="k"><div class="kw"><span class="sw" style="background:#8e3fd1"></span><span class="lbl">Purple</span></div></td><td class="s">Rainbow</td><td>Rainbow colours flow up the tree and into the star.</td></tr>
+<tr><td class="n">5</td><td class="k"><div class="kw"><span class="sw" style="background:#2563eb"></span><span class="lbl">Blue</span></div></td><td class="s">Twinkle</td><td>A soft warm glow with sparkling twinkles.</td></tr>
+<tr><td class="n">6</td><td class="k"><div class="kw"><span class="sw" style="background:#22a83a"></span><span class="lbl">Green</span></div></td><td class="s">Sound rainbow<span class="small">&#9835; Music show</span></td><td>Dances to music: the tree fills with colour as the music gets louder, and the star changes colour and flashes with the beat. <b>Turning the knob</b> sets how sensitive it is to sound.</td></tr>
+<tr><td class="n">7</td><td class="k"><div class="kw"><span class="sw" style="background:#22c7c7"></span><span class="lbl">Light blue-<br>green</span></div></td><td class="s">Star white, rainbow twinkle</td><td>A bright white star over a tree of twinkling rainbow sparkles.</td></tr>
+<tr><td class="n">8</td><td class="k"><div class="kw"><span class="sw" style="background:#dfeeff"></span><span class="lbl">Pale cool<br>white</span></div></td><td class="s">White twinkle</td><td>A bright white star, and the tree twinkles in soft white.</td></tr>
+<tr><td class="n">9</td><td class="k"><div class="kw"><span class="sw" style="background:#f28c1c"></span><span class="lbl">Orange</span></div></td><td class="s">Sound white star<span class="small">&#9835; Music show</span></td><td>Dances to music: the white star pulses with the beat, and the tree changes colour. <b>Turning the knob</b> sets how sensitive it is to sound.</td></tr>
+<tr><td class="n">10</td><td class="k"><div class="kw"><span class="sw" style="background:#ec4fa0"></span><span class="lbl">Pink</span></div></td><td class="s">Color chaser</td><td>A burst of colour climbs up the tree, circles the star and flashes at the tip, then the next colour follows. Always at full brightness &mdash; <b>turning the knob</b> changes the speed.</td></tr>
+<tr><td class="n">11</td><td class="k"><div class="kw"><span class="sw" style="background:#333; border-style:dashed"></span><span class="lbl">Knob light off</span></div></td><td class="s">Off</td><td>The lights are off. Push once more to start again from <b>White pulse</b>.</td></tr>
+</table>
+<div class="tip note">
+<b>Brightness:</b> turn the knob to make the lights brighter or dimmer (except in the music shows and Color chaser, as noted above). The star always stays nice and bright.<br>
+<b>It remembers:</b> your last light show and brightness are kept, even when it&rsquo;s unplugged.
+</div>
+</section>
+</body></html>
