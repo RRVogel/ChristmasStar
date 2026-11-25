@@ -39,7 +39,7 @@
 #include <driver/spi_master.h>
 #include <esp_heap_caps.h>
 
-#define BUILD_TAG "2026-11-24e power-toggle"
+#define BUILD_TAG "2026-11-24f ota-test diag4s"
 
 // ---------------- Build options ----------------
 #define TEST_MODE 0              // 1 = color/chain-order test, no normal modes
@@ -48,7 +48,7 @@
 
 // Pull-OTA: bump this when you publish a new .bin, and put the same number
 // in manifest.json. The star updates itself if the manifest version is higher.
-const uint16_t FW_VERSION = 1;
+const uint16_t FW_VERSION = 2;
 const char *UPDATE_MANIFEST_URL =
     "https://raw.githubusercontent.com/RRVogel/ChristmasStar/main/manifest.json";
 
@@ -117,7 +117,7 @@ const uint32_t DEBOUNCE_MS    = 30;
 const uint32_t INPUT_POLL_MS  = 10;
 const uint32_t FRAME_MS       = 20;       // ~50 fps
 const uint32_t SAVE_DELAY_MS  = 3000;     // write NVS 3 s after last change
-const uint32_t DIAG_MS        = 2000;
+const uint32_t DIAG_MS        = 4000;   // status line every 4 s
 const uint32_t PORTAL_TIMEOUT_MS = 10UL * 60UL * 1000UL;  // ~10 min
 const uint32_t OTA_FIRST_CHECK_MS = 60000;
 const uint32_t OTA_PERIOD_MS  = 24UL * 60UL * 60UL * 1000UL;
